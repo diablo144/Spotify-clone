@@ -1,5 +1,6 @@
 let currentSong = new Audio();
-let Songs;
+let Songs = [];
+let currentIndex = 0;
 
 function formatTime(seconds) {
     if (isNaN(seconds)) return "00:00";
@@ -10,115 +11,234 @@ function formatTime(seconds) {
 
 async function fetchData() {
     try {
-        let a = await fetch(`http://127.0.0.1:5500/Song/`);
-        let b = await a.text();
-        let div = document.createElement("div");
-        div.innerHTML = b;
-        let data = div.getElementsByTagName('li');
-        let Songs = [];
-        for (let i = 0; i < data.length; i++) {
-            const element = data[i];
-            const list = element.querySelector('a');
-            if (list && list.href.endsWith('.mp3')) {
-                Songs.push(list.href);
-            }
+        
+        let response = await fetch('songs.json');
+        if (response.ok) {
+            let songsData = await response.json();
+            return songsData.map(song => {
+                
+                if (!song.startsWith('http')) {
+                    
+                    const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+                    return baseUrl + song;
+                }
+                return song;
+            });
+        } else {
+            throw new Error('songs.json not found');
         }
-        return Songs;
     } catch (error) {
-        console.log("Error" + error);
-        return [];
+        console.log( error);
+        
+        
+        const hardcodedSongs = [
+           "Song/Adada-Mazhaida.mp3",
+  "Song/Adiye-Sakkarakatti.mp3",
+  "Song/Anbe-enAnbe.mp3",
+  "Song/Kurumugil.mp3",
+  "Song/Nee-Kavithaigala.mp3",
+  "Song/Nillayo.mp3",
+  "Song/PookalPookum.mp3",
+  "Song/Tamilselvi.mp3"
+        ];
+        
+        const baseUrl = window.location.origin + window.location.pathname.replace('index.html', '');
+        return hardcodedSongs.map(song => baseUrl + song);
     }
 }
 
-const playMusic = (track,pause = false) => {
+const playMusic = (track, pause = false) => {
     currentSong.src = track;
-    
+    currentIndex = Songs.indexOf(track);
 
-    if(!pause){
+    if (!pause) {
+        currentSong.play().catch(e => {
+            console.log("Error playing audio:", e);
+            alert("Could not play this song. Please check if the file exists and is accessible.");
+        });
+    }
 
-        currentSong.play();
+    const play = document.getElementById('play');
+    if (play) {
+        play.src = "img/pause.svg";
     }
     
-    play.src = "img/pause.svg";
-    const songName = decodeURI(track.split('/').pop().replace('.mp3',' '))
-    document.querySelector('.songinfo').innerHTML = songName;
-    document.querySelector('.songtime').innerHTML = "00:00";
+    const songName = decodeURI(track.split('/').pop().replace('.mp3', ''));
+    const songinfoEl = document.querySelector('.songinfo');
+    const songtimeEl = document.querySelector('.songtime');
+    
+    if (songinfoEl) songinfoEl.innerHTML = songName;
+    if (songtimeEl) songtimeEl.innerHTML = "00:00 / 00:00";
 }
 
 async function main() {
-     Songs = await fetchData();
-    playMusic(Songs[2], true);
-    
-    
-    let songUl = document.querySelector('.songList').getElementsByTagName("ul")[0];
-    for (const song of Songs) {
-        let name = song.split('/').pop().replaceAll('%20', ' ').replace('.mp3', ' ');
-        songUl.innerHTML += `<li>
-                                <img src="img/music.svg" class="invert">
-                                <div class="info">
-                                    <div> ${name}</div>
-                                </div>
-                                <span>Play Now</span>
-                                <img src="img/play.svg" class="invert">
-                            </li>`;
-    }
-    Array.from(document.querySelector(".songList").getElementsByTagName('li')).forEach(e => {
-        e.addEventListener("click", element => {
-           let clickedName = e.querySelector('.info').firstElementChild.innerHTML.trim();
-            let clickedTrack = Songs.find(song => {
-            let songName = decodeURI(song.split('/').pop().replace('.mp3', '').trim());
-            return songName === clickedName;
-});
-
-if (clickedTrack) {
-    playMusic(clickedTrack);
-}
-
-        });
-    });
-    const play = document.getElementById('play');
-    play.addEventListener("click", () => {
-                      if (currentSong.paused) {
-            currentSong.play();
-            play.src = "img/pause.svg";
-        } else {
-            currentSong.pause();
-            play.src = "img/play.svg";
-        }
-    });
-    currentSong.addEventListener('timeupdate', () => {
-        const currentTime = formatTime(currentSong.currentTime);
-        const duration = formatTime(currentSong.duration);
-        document.querySelector('.songtime').innerHTML = `${currentTime} / ${duration}`;
-        document.querySelector('.circle').style.left = (currentSong.currentTime / currentSong.duration) * 100 + '%';
-    });
-
-
-    document.querySelector('.seekbar').addEventListener('click',e=>{
-        document.querySelector('.circle').style.left = (e.offsetX/e.target.getBoundingClientRect().width )*100 +'%';
-        let percent = (e.offsetX/e.target.getBoundingClientRect().width )*100;
-        currentSong.currentTime = ((currentSong.duration)*percent)/100
-      
-    })
-
-    
-    previous.addEventListener("click",()=>{
-         let index = Songs.indexOf(currentSong.src)
-         if((index-1)>=0){
-            playMusic(Songs[index-1])
-         }
-    })
-    
-    next.addEventListener("click",()=>{
-        let index = Songs.indexOf(currentSong.src)
-        if((index + 1) <=Songs.length){
-            playMusic(Songs[index+1])
-        }
-    })
-
-    document.querySelector('.range').getElementsByTagName('input')[0].addEventListener("click",(e)=>{
+    try {
+        Songs = await fetchData();
         
-        currentSong.volume = parseInt(e.target.value)/100
-    })
+        if (Songs.length === 0) {
+            console.log("No songs found");
+            const songUl = document.querySelector('.songList').getElementsByTagName("ul")[0];
+            if (songUl) {
+                songUl.innerHTML = '<li style="color: red; padding: 20px;">No songs found. Please add songs.json file or check your Song folder.</li>';
+            }
+            return;
+        }
+
+        
+        if (Songs.length > 0) {
+            playMusic(Songs[0], true);
+        }
+
+        
+        let songUl = document.querySelector('.songList').getElementsByTagName("ul")[0];
+        if (songUl) {
+            songUl.innerHTML = ''; 
+            
+            for (let i = 0; i < Songs.length; i++) {
+                const song = Songs[i];
+                let name = decodeURI(song.split('/').pop().replace('.mp3', ''));
+                songUl.innerHTML += `<li data-index="${i}">
+                                        <img src="img/music.svg" class="invert">
+                                        <div class="info">
+                                            <div>${name}</div>
+                                        </div>
+                                        <span>Play Now</span>
+                                        <img src="img/play.svg" class="invert">
+                                    </li>`;
+            }
+
+            
+            Array.from(songUl.getElementsByTagName('li')).forEach(e => {
+                e.addEventListener("click", () => {
+                    const index = parseInt(e.getAttribute('data-index'));
+                    if (Songs[index]) {
+                        playMusic(Songs[index]);
+                    }
+                });
+            });
+        }
+
+    
+        const play = document.getElementById('play');
+        if (play) {
+            play.addEventListener("click", () => {
+                if (currentSong.paused) {
+                    currentSong.play().catch(e => {
+                        console.log("Error playing audio:", e);
+                        alert("Could not play this song. Please check if the file exists and is accessible.");
+                    });
+                    play.src = "img/pause.svg";
+                } else {
+                    currentSong.pause();
+                    play.src = "img/play.svg";
+                }
+            });
+        }
+
+        currentSong.addEventListener('timeupdate', () => {
+            const currentTime = formatTime(currentSong.currentTime);
+            const duration = formatTime(currentSong.duration);
+            const songtimeEl = document.querySelector('.songtime');
+            const circleEl = document.querySelector('.circle');
+            
+            if (songtimeEl) {
+                songtimeEl.innerHTML = `${currentTime} / ${duration}`;
+            }
+            
+            if (circleEl && currentSong.duration) {
+                const percentage = (currentSong.currentTime / currentSong.duration) * 100;
+                circleEl.style.left = percentage + '%';
+            }
+        });
+
+    
+        const seekbar = document.querySelector('.seekbar');
+        if (seekbar) {
+            seekbar.addEventListener('click', e => {
+                const rect = e.target.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width * 100;
+                const circleEl = document.querySelector('.circle');
+                
+                if (circleEl) {
+                    circleEl.style.left = percent + '%';
+                }
+                
+                if (currentSong.duration) {
+                    currentSong.currentTime = (currentSong.duration * percent) / 100;
+                }
+            });
+        }
+
+        
+        const previous = document.getElementById('previous');
+        if (previous) {
+            previous.addEventListener("click", () => {
+                if (currentIndex > 0) {
+                    playMusic(Songs[currentIndex - 1]);
+                } else {
+                    
+                    playMusic(Songs[Songs.length - 1]);
+                }
+            });
+        }
+
+        
+        const next = document.getElementById('next');
+        if (next) {
+            next.addEventListener("click", () => {
+                if (currentIndex < Songs.length - 1) {
+                    playMusic(Songs[currentIndex + 1]);
+                } else {
+                    
+                    playMusic(Songs[0]);
+                }
+            });
+        }
+
+        
+        const volumeInput = document.querySelector('.range input[type="range"]');
+        if (volumeInput) {
+            volumeInput.addEventListener("input", (e) => {
+                currentSong.volume = parseInt(e.target.value) / 100;
+            });
+            
+        
+            currentSong.volume = 0.5;
+            volumeInput.value = 50;
+        }
+
+       
+        currentSong.addEventListener('ended', () => {
+            if (next) {
+                next.click();
+            }
+        });
+
+       
+        const hamburger = document.querySelector('.hamburger');
+        const leftPanel = document.querySelector('.left');
+        const closeBtn = document.querySelector('.close img');
+
+        if (hamburger && leftPanel) {
+            hamburger.addEventListener('click', () => {
+                leftPanel.style.left = '0';
+            });
+        }
+
+        if (closeBtn && leftPanel) {
+            closeBtn.addEventListener('click', () => {
+                leftPanel.style.left = '-130%';
+            });
+        }
+
+    } catch (error) {
+        console.error("Error in main function:", error);
+    }
 }
-main()
+
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', main);
+} else {
+    main();
+}
