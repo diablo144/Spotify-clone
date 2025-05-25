@@ -1,0 +1,125 @@
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: arial;
+}
+body{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color:black;
+  position: relative;
+  padding-top: 70px;
+}
+.main{
+  display: block;
+  border:4px solid rgb(38 38 38);
+  border-radius: 10px;
+  width:30vw;
+  background-color: rgb(38 38 38);
+  margin-top:30px;
+  height:100; 
+}
+.logo-img{
+  width:50px;
+  height: auto;
+  filter: invert(1);
+  margin-bottom: 20px;
+  align-self: center;
+  margin-left: 160px;
+}
+
+.main.div{
+  align-items: center;
+}
+.opt{
+  display: flex;
+  align-items: flex-start;
+  justify-content:flex-start;
+  margin:10px 0px 0px 20px;
+  margin-top: 30px;
+}
+h2{
+  margin-left: 100px;
+  margin-bottom: 30px;
+  color: white;
+}
+.btn{
+  background-color: black;
+  border-radius:20px;
+  padding: 9px 30px;
+  padding-bottom: 9px;
+  width:27vw;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  color: white;
+}
+.logo{
+  width:20px;
+}
+.hi{
+  margin-left: 20px;
+  color: white;
+}
+hr{
+  margin:30px 0px;
+  color:rgb(18 18 18);
+}
+.para{
+  margin-right: 20px;
+  color:white;
+  font-size:15px;
+}
+.pass-input{
+  margin-left: 66px;
+}
+.log-btn{
+  margin-left: 105px;
+  background-color: rgb(30 215 96);
+  padding:10px 50px;
+  border-radius: 30px;
+  cursor:pointer;
+  color:black;
+  font-weight: 700;
+  font-size: larger;
+  border:none;
+}
+.ref{
+  margin-left:70px;
+}
+.para-op{
+  opacity: 10;
+  color: rgb(18 18 18);
+}
+.input{
+  padding: 6px 10px;
+  outline: none;
+  color:black;
+  border:none;
+}
+
+.btn:hover{
+  background-color:rgb(30 215 96);
+  color:black;
+}
+.ref,.btn-log{
+  text-decoration: none;
+  color:white;
+}
+
+.btn-log:hover{
+  color: rgb(30 215 96);
+}
+.ref:hover{
+  color: rgb(30 215 96);
+}
+
+.app-logo{
+  margin-left:-18px;
+}
+.google-logo{
+  margin-left:-10px;
+}
